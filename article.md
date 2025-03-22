@@ -2,44 +2,26 @@
 
 ## Introduction
 
-Hi everyone! My name is [your name] and today I want to talk about time-series data management. I encountered this challenge while working on one of our projects and wanted to share my experience and highlight features that can be particularly useful and advantageous compared to traditional development tools.
+Hi everyone! Today I want to talk about time-series data management. I encountered this challenge while working on one of our projects and wanted to share my experience and highlight features that can be particularly useful and advantageous compared to traditional databases.
 
 ## Understanding Time-Series Data: Characteristics and Challenges
 
-Let's start with the basics and break down what time-series data actually is. Time-series data is a sequence of data points indexed in time order and has several unique properties that differentiate it from other types of data:
+Let's start with the basics and break down what time-series data actually is. Time-series data is a sequence of data points indexed in time order and has properties that differentiate it from other types of data: append-only data (new data is continuously added and not altered), naturally ordered (chronological sequence), time-centric (primary attribute for analysis).
 
-- **Append-Only Data**: New data is continuously added, and historical data rarely changes.
-- **Time-Centric**: Time is a primary attribute and often determines how data is analyzed or queried.
-- **Immutable Historical Data**: Once stored, historical records are generally not altered.
-- **Naturally Ordered**: Data points have natural chronological sequence.
-
-Common examples of time-series data include:
-
-- Stock prices over time
-- Weather measurements (temperature, humidity, wind speed)
-- Monthly subscriber counts on a website
-- Sensor readings from IoT devices
+Common examples of time-series data include: stock prices over time, weather measurements (temperature, humidity, wind speed), monthly subscriber counts on a website, sensor readings from IoT devices, etc.
 
 ### Common Challenges
 
 When working with time-series data, there are several important challenges to consider:
 
-- **Data Volume and Scaling**: The high-frequency nature of time-series data leads to rapid database growth. While recent data is often more critical, historical data still needs to be stored for analysis, making traditional databases struggle with performance as data accumulates.
+- **Data Volume and Scaling**: High-frequency data collection leads to rapid growth, making traditional databases struggle with performance
 - **Complex Aggregations**: Queries like averages, sums, or analyzing patterns over time need to be performed efficiently.
 
 These characteristics and challenges require specialized approaches for optimal storage and querying. Traditional relational databases can become overwhelmed when dealing with large volumes of time-series data, especially when performing complex time-based aggregations.
 
 ### Time-Series Databases
 
-Several specialized database systems exist to address these challenges:
-
-- **InfluxDB**: A purpose-built time-series database with its own query language (InfluxQL/Flux)
-- **Prometheus**: Focused on metrics collection and alerting for monitoring systems
-- **Apache Druid**: Designed for real-time analytics on large datasets
-- **MongoDB**: Offers time-series collections in newer versions
-- **Amazon Timestream**: AWS's managed time-series database service
-
-Each has its strengths and fits different use cases. However, in this article, we'll focus on TimescaleDB.
+Several specialized database systems exist to address these challenges: InfluxDB, Prometheus, Apache Druid, MongoDB, Amazon Timestream. Each has its strengths and fits different use cases. However, in this article, we'll focus on TimescaleDB.
 
 ## TimescaleDB
 
@@ -50,14 +32,11 @@ TimescaleDB is a time-series database built as an extension to PostgreSQL with t
 - **Postgres-Based**: Full SQL compatible and supports relational capabilities
 - **Hypertables**: Automatically partitions the time-series data into chunks for optimal performance
 - **Hypercore**: Smart storage engine that writes new data quickly and automatically reorganizes older data for faster analysis and better storage efficiency
-- **Data Lifecycle Management**: 
-  - Allows you to continuously aggregate data by pre-computing and automatically refreshing the summarized views
-  - Automatically manages data movement between storage types as data ages
-  - Allows you to automatically delete data by age, by dropping chunks from a hypertable
+- **Data Lifecycle Management**: Automatic data handling like continuous aggregation, data retention (deleting old data)
 
 ## Practical Example: Intel Lab Sensor Data
 
-Let's walk through a practical example using sensor data from the Intel Berkeley Research Lab. This dataset contains millions of temperature, humidity, light, and voltage readings from 54 sensors deployed throughout the lab between February 28th and April 5th, 2004. We chose this dataset because its relatively small size (about 2.3 million readings) is perfect for demonstration purposes while still being large enough to show performance differences between PostgreSQL and TimescaleDB.
+For practical example we are using sensor data from the [Intel Berkeley Research Lab] (https://db.csail.mit.edu/labdata/labdata.html). This dataset contains millions of temperature, humidity, light, and voltage readings from 54 sensors deployed throughout the lab between February 28th and April 5th, 2004. We chose this dataset because its relatively small size (about 2.3 million readings) but fits for demonstration of the performance differences between PostgreSQL and TimescaleDB
 
 ### Setting Up Our Environment
 
@@ -100,10 +79,12 @@ All performance tests were run on:
 - MacBook Air (M1, 2020)
 - Apple M1 chip
 - 16 GB RAM
+- PostgreSQL 14.17 (64-bit)
+- TimescaleDB 2.19.0
 
-Note: Performance results may vary on different hardware configurations, but the overall performance patterns and relative improvements should remain consistent across systems.
+Note: Performance results may vary on different hardware configurations, but the overall performance patterns should remain consistent across systems.
 
-We loaded 1,841,828 rows and ran identical queries on both tables to compare their performance. Let's look at each query type and its results:
+We loaded 1,841,828 rows and ran identical queries on both tables. Let's look at each query type and its results:
 
 1. **Full Range Select**: Basic retrieval of all data within a time range
 
@@ -163,12 +144,11 @@ ORDER BY day, sensor_id;
 **Insights:**
 - TimescaleDB significantly outperforms PostgreSQL for aggregation queries
 - The `time_bucket` function is more efficient than `date_trunc`
-- Complex calculations (like stddev) benefit from TimescaleDB's chunk-based processing
 - TimescaleDB's memory efficiency becomes more important with complex aggregations
 
 ### Advanced TimescaleDB Features: Continuous Aggregates
 
-One of TimescaleDB's most powerful features is continuous aggregates. These pre-compute and automatically maintain aggregated views of your time-series data, dramatically improving query performance for common analytical operations.
+One of TimescaleDB's most powerful features is continuous aggregates. It pre-computes and automatically maintains aggregated views of the time-series data by improving query performance for common analytical operations.
 
 Let's compare a regular PostgreSQL view with a TimescaleDB continuous aggregate:
 
@@ -227,9 +207,10 @@ ORDER BY day, sensor_id;
 - Performance: TimescaleDB is 979x faster
 
 ### Storage Optimization:
-TimescaleDB provides powerful data optimization capabilities through its [Hypercore storage engine](https://docs.timescale.com/use-timescale/latest/hypercore/) - a hybrid row-columnar system that automatically handles compression and optimization by writing new data to rowstore for fast ingest, then migrating it to columnstore as it "cools down" for >90% compression while maintaining full functionality. Note: The following compression method is from the old API (pre-TimescaleDB v2.18.0).
+TimescaleDB can automatically compress the data and save a lot of memory.
+It's new [Hypercore](https://docs.timescale.com/use-timescale/latest/hypercore/) automatically optimizes data storage - new data goes to fast-access storage, then moves to compressed storage (>90% reduction) as it ages, it is available after v2.18.0 API. But for demonstration, we will use old chunking methods.
 
-Both PostgreSQL and TimescaleDB tables start at similar sizes (around 209 MB) with our test dataset. Let's look at how compression works and how to implement it:
+Both PostgreSQL and TimescaleDB tables start at similar sizes (around 209 MB) with our test dataset:
 
 ```sql
 -- Check regular PostgreSQL table size
@@ -258,16 +239,20 @@ SELECT hypertable_size('sensor_data_timescale')/1024/1024 as size_mb;
 **Insights:**
 - Native compression provides significant storage savings (83% reduction)
 - Compression maintains query functionality while dramatically reducing storage costs
+- Choose compression settings strategically:
+  - `compress_orderby='time'`: Best for time-series data as values typically follow changes over time
+  - `compress_segmentby='sensor_id'`: Group data by columns you frequently filter or aggregate on
+  - For example, if you often query `SELECT avg(temperature) FROM sensors WHERE sensor_id = 5`, using sensor_id as segmentby will improve query performance
+- Compression works best when chunks have enough data (default batch size is 1000 rows)
 - Automatic compression policies keep storage optimization hands-free
 
-This combination of performance, storage efficiency, and automated maintenance makes continuous aggregates ideal for time-series analytics workloads.
+[Learn more about compression settings](https://docs.timescale.com/use-timescale/latest/compression/about-compression/)
+
 
 ## Final Thoughts
-Our performance tests demonstrated TimescaleDB's significant advantages for time-series data management. While traditional PostgreSQL performed better for simple queries, TimescaleDB showed its strength in complex time-based operations, with up to 979x performance improvement for aggregation queries.
+Our performance tests demonstrated TimescaleDB's significant advantages for time-series data management. While traditional PostgreSQL performed better for simple queries, TimescaleDB is a good choice in complex time-based operations with performance improvement for aggregation queries.
 
-In my experience, we successfully used TimescaleDB for tracking webpage analytics, collecting views and clicks data. Using continuous aggregation, we were able to efficiently analyze and display page statistics across a 2-3 year range. This real-world application demonstrated how continuous aggregates can handle long-range historical data queries without performance degradation, making it perfect for analytics dashboards and long-term trend analysis.
-
-What's particularly noteworthy is the economic benefit. The storage efficiency of continuous aggregates (achieving 66.7% size ratio in our tests) translates directly into infrastructure cost savings. In production environments, this approach can reduce memory consumption by 30-40%, leading to substantial cost reductions in cloud infrastructure spending. When dealing with large-scale time-series data, these savings can significantly impact your operational budget.
+In my experience, we successfully used TimescaleDB for tracking webpage analytics, collecting views and clicks data. Using continuous aggregation, we were able to efficiently analyze and display page statistics across a 2-3 year range. This reduced the memory consumption by 30-40%, leading to substantial cost reductions in cloud infrastructure spending. When dealing with large-scale time-series data, these savings can significantly impact your operational budget.
 
 ---
 
