@@ -249,7 +249,7 @@ SELECT hypertable_size('sensor_data_timescale')/1024/1024 as size_mb;
 
 **Insights:**
 - Native compression provides significant storage savings (83% reduction)
-- Compression maintains query functionality but reduces the storage costs
+- Compression maintains query functionality and reduces the storage costs
 - Choose compression settings strategically:
   - `compress_orderby='time'`: Best for time-series data as values typically follow changes over time
   - `compress_segmentby='sensor_id'`: Group data by columns you frequently filter or aggregate on
