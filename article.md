@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Hi everyone! Today I want to talk about time-series data management. We encountered this challenge while working on one of our projects and wanted to share my experience and highlight features that can be particularly useful and advantageous compared to traditional databases.
+Hi everyone! Today I want to talk about time-series data management. We encountered this challenge while working on one of our projects and wanted to share my experience and highlight features that can be better compared to traditional databases.
 
 ## Understanding Time-Series Data: Characteristics and Challenges
 
