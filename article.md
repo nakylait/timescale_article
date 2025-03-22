@@ -226,29 +226,39 @@ ORDER BY day, sensor_id;
 - TimescaleDB continuous aggregate: 0.433 ms (pre-computed)
 - Performance: TimescaleDB is 979x faster
 
-**Storage Analysis:**
-We measured the actual storage sizes using PostgreSQL's built-in functions:
-```sql
--- For raw data size
-SELECT pg_total_relation_size('sensor_data_timescale');
+### Storage Optimization:
+TimescaleDB provides powerful data optimization capabilities through its [Hypercore storage engine](https://docs.timescale.com/use-timescale/latest/hypercore/) - a hybrid row-columnar system that automatically handles compression and optimization by writing new data to rowstore for fast ingest, then migrating it to columnstore as it "cools down" for >90% compression while maintaining full functionality. Note: The following compression method is from the old API (pre-TimescaleDB v2.18.0).
 
--- For continuous aggregate size (internal materialized table)
-SELECT pg_total_relation_size(format('%I.%I', 
-    materialization_hypertable_schema,
-    materialization_hypertable_name
-))
-FROM timescaledb_information.continuous_aggregates 
-WHERE view_name = 'ts_daily_sensor_stats';
+Both PostgreSQL and TimescaleDB tables start at similar sizes (around 209 MB) with our test dataset. Let's look at how compression works and how to implement it:
+
+```sql
+-- Check regular PostgreSQL table size
+SELECT pg_total_relation_size('sensor_data_postgres')/1024/1024 as size_mb;
+-- PostgreSQL size: 209 MB
+
+-- Check hypertable size before compression
+SELECT hypertable_size('sensor_data_timescale')/1024/1024 as size_mb;
+-- TimescaleDB size before compression: 208 MB
+
+-- Enable compression on table
+ALTER TABLE sensor_data_timescale SET (
+    timescaledb.compress,
+    timescaledb.compress_segmentby = 'sensor_id',
+    timescaledb.compress_orderby = 'time'
+);
+
+-- Create compression policy (compress chunks older than 7 days)
+SELECT add_compression_policy('sensor_data_timescale', INTERVAL '7 days');
+
+-- Check hypertable size after compression
+SELECT hypertable_size('sensor_data_timescale')/1024/1024 as size_mb;
+-- TimescaleDB size after compression: 35 MB (83% reduction)
 ```
 
-Results showed:
-- Raw data size: 24 kB
-- Continuous aggregate size: 16 kB (66.7% of original size)
-
 **Insights:**
-- Continuous aggregates provide dramatic performance improvements through pre-computation
-- Storage efficiency is good: 16 kB for the aggregate vs 24 kB for raw data (66.7% of original size)
-- Automatic refresh policies keep data current without manual intervention
+- Native compression provides significant storage savings (83% reduction)
+- Compression maintains query functionality while dramatically reducing storage costs
+- Automatic compression policies keep storage optimization hands-free
 
 This combination of performance, storage efficiency, and automated maintenance makes continuous aggregates ideal for time-series analytics workloads.
 
@@ -263,3 +273,5 @@ What's particularly noteworthy is the economic benefit. The storage efficiency o
 
 
 https://maddevs.io/writeups/tax-fee-erc-20-token-design/
+
+
