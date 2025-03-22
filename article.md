@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Hi everyone! Today I want to talk about time-series data management. We encountered this challenge while working on one of our projects and wanted to share my experience and highlight features that can be better compared to traditional databases.
+Hi everyone! Today I want to talk about time-series data management. We encountered this challenge while working on one of our projects and below I will share our experience with TimescaleBD and highlight it's outstanding features.
 
 ## Understanding Time-Series Data: Characteristics and Challenges
 
@@ -10,7 +10,7 @@ Time-series data is simply a sequence of data points collected over time - think
 
 Common examples of time-series data include: stock prices over time, weather measurements (temperature, humidity, wind speed), monthly subscriber counts on a website, sensor readings from IoT devices, etc.
 
-We actually encountered time-series data in a real-world e-commerce project we built. We needed to track how many times product pages were viewed and how often users clicked on them. We also recorded each product's daily position in search results, since merchants paid for premium placements. This created a perfect time-series dataset - every day we collected thousands of new records with timestamps, while the historical data remained unchanged. We used this data to show merchants evidence that higher positions actually led to more visibility and clicks.
+We encountered time-series data in a real-world e-commerce project we built. We needed to track how many times product pages were viewed and how often users clicked on them. We also recorded each product's daily position in search results, since merchants paid for premium placements. This created a perfect time-series dataset - every day we collected thousands of new records with timestamps, while the historical data remained unchanged. We used this data to show merchants evidence that higher positions actually led to more visibility and clicks.
 
 ### Common Challenges
 
