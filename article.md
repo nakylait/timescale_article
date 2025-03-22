@@ -82,7 +82,7 @@ All performance tests were run on:
 - PostgreSQL 14.17 (64-bit)
 - TimescaleDB 2.19.0
 
-Note: Performance results may vary on different hardware configurations, but the overall performance patterns should remain consistent across systems.
+Note: Performance results may vary on different hardware configurations, but the overall tendency remain consistent across systems.
 
 We loaded 1,841,828 rows and ran identical queries on both tables. Let's look at each query type and its results:
 
