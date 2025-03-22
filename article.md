@@ -264,7 +264,7 @@ simple queries, TimescaleDB is a good choice in complex time-based operations wi
 
 In our real-world e-commerce project, we successfully implemented TimescaleDB to track product page views, click-through rates, and search position rankings. This gave us the perfect solution for our expanding dataset—every day, we collected thousands of new timestamped records while keeping historical data intact. Using continuous aggregation, we were able to efficiently analyze how premium placements affected visibility and clicks across a 2-3 year period, providing merchants with evidence that higher positions actually increased engagement.
 
-The storage benefits were substantial too. TimescaleDB's compression reduced our storage needs by about 30-40%. This led to real cost savings in our cloud bills. Our analytics platform became more responsive, and our budget healthier. These benefits matter even more when you're dealing with large amounts of time-series data.
+The storage benefits were significant too. TimescaleDB's compression reduced our storage needs by about 30-40%. This led to real cost savings in our cloud bills. Our analytics platform became more responsive, and our budget healthier. These benefits matter even more when you're dealing with large amounts of time-series data.
 
 If you work with growing time-series data and need complex analysis, TimescaleDB is worth considering. It gives you powerful tools while letting you keep using familiar SQL.
 
